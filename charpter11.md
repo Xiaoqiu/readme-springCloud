@@ -88,29 +88,44 @@ server:
   - 映射关系：
     - application/profile/label
     - 应用名称(config-info)/激活环境名(dev，test,prod)/git分支(默认master)
+  - 测试：http://localhost:9090/config-info/dev/master
+  - config-server控制台打印信息可知，在本地的临时目录下面克隆了远程仓库的配置信息。
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- 2 config client 配置
+  - 1）创建工程模块
+    - config-client 模块
+  - 2）配置依赖 ： client 和web依赖
+    - spring- cloud- config- client：客户端用来向服务端拉取配置所需依赖。
+  - 3）编写主程序入口代码
+    - 启动类ClientConfigGitApplication
+    - 创建一个controller更好观察拉取到的git配置
+    - 创建一个读取配置的对象
+      - @ConfigurationProperties(prefix = "cn.springcloud.book")
+  - 4）配置文件配置
+    - bootstrap.yml文件优先于application.yml
+    - 修改git配置，需要重启，下面有不需要重启的方式
+    - application.yml
+  ```yaml
+  server:
+    port: 9091
+  spring:
+    application:
+      name: ch11-1-config-client
+  ```
+    - bootstrap.yml
+    ```yaml
+    spring:
+      cloud:
+        config:
+          label: master # 代表请求那个git分支
+          uri: http://localhost:9090 # 代表请求的config server 地址
+          name: config-info # 代表请求那个应用名，也可以理解为git上面的文件名。
+          profile: dev #那个环境的dev, test, prod
+    ```
 
 11.2 刷新配置中心信息
 11.2.1 手动刷新操作
+
 11.2.2 结合spring cloud bus 热刷新
 
 11.2 本章小结
