@@ -57,7 +57,7 @@
       }
     }
     ```
- - 配置文件配置：application.yml
+ - 6）配置文件配置：application.yml
 ```yaml
 
 spring:
@@ -65,9 +65,11 @@ spring:
     config:
       server:
         git:
-          uri: https://gitee.com/zhongzunfa/spring-cloud-config.git
-          username:
-          password:
+          uri: https://gitee.com/zhongzunfa/spring-cloud-config.git # git 服务器地址
+          username: # git用户名
+          password: # git 密码
+          # 搜索SC-BOOK-CONFIG 目录下所有满足条件的配置文件，
+          # 多个目录目录下所有满足条件的配置文件，多个用逗号隔开
           search-paths: SC-BOOK-CONFIG
 application:
   name: sc-config-git
@@ -75,6 +77,18 @@ server:
   port: 9090
 
 ```
+  - 在git仓库创建文件夹SC-BOOK-CONFIG，创建三个文件：config-info-dev.yml, config-info-test.yml, config-info-prod.yml,
+  - config-info-dev.yml内容：
+  ```yaml
+  cn:
+    springcloud:
+      book:
+        config: I am the git configura file from dev environment.
+  ```
+  - 映射关系：
+    - application/profile/label
+    - 应用名称(config-info)/激活环境名(dev，test,prod)/git分支(默认master)
+
 
 
 
