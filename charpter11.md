@@ -125,7 +125,196 @@ server:
 
 11.2 刷新配置中心信息
 11.2.1 手动刷新操作
+- 不需要重启，就可以手动刷新获取最新配置
+- 1）配置依赖
+  - spring-cloud-config-client
+  - spring-boot-starter-security # 进行权限过滤，不进行端点拦截
+- 2）配置文件配置
+  - 再创建application.properties
+    - management.endpoints.web.exposure.include=* //表示包含所有端点。
+      - 默认情况下只打开info,health端点。
+    - management.endpoints.health.show-details=always // 表示详细信息的显示
+  - 修改application.yml文件
+  ```yaml
+    server:
+      port: 9093
+  ```
+- 3)添加安全配置 config-client-refresh
+```java
+// SecurityConfiguration.java
+@Configuration
+public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
+  @Override
+  protected void configure(HttpSecurity http) throws Exception {
+    http.csrf().disable(); // 关闭端点的安全校验
+  }
+}
+```
+- 4）Controller类的变更
+  - 在ConfigClientController上添加@RefreshScope注解
+  - @RefreshScope注解：修饰的bean延迟加载，只有第一次访问时，才会被初始化。刷新bean，下次访问时会创建一个新的对象。
+  ```java
+  @RefreshScope
+  @RestController
+  public class ConfigClientController {
+    @Autowired
+    private ConfigInfoProperties configInfoValue;
 
+    @RequestMapping("/getConfiginfo")
+    public String getConfiginfo(){
+      return configInfoValue.getConfig();
+    }
+  }
+
+  @Component
+  @RefreshScope
+  public class ConfigInfoProperties {
+    @Value("${cn.springcloud.book.config}")
+    private String config;
+  }
+  ```
+  - 修改远程仓库config-info-dev.yml配置，
+  - 访问：localhost:9093/configConsumer/getConfigInfo发现内容没有变化。
+  - 刷新配置信息，localhost:9093/actuator/refresh, 再访问上面的url，信息发生变化。
+  -
 11.2.2 结合spring cloud bus 热刷新
+- 远程仓库通过git web hook通知config-server配置文件的变化
+- config-server接收git的消息，spring cloud bus将消息发送到config client.
+- cofig client接收到信息会重新发送加载配置信息的请求。
+- 例子：使用Rabbit MQ作为消息中间件。
+
+- 1）创建maven工程:依赖
+  - spring-boot-starter-web
+  - spring-boot-starter-actuator
+  - spring-cloud-starter-bus-amqp
+
+- 2) 创建module: config-server-bus 配置依赖
+  - spring-cloud-starter-bus-amqp
+  - spring-cloud-config-server
+  - spring-boot-starter-security //简单的安全和端点开放
+- 3）编写主程序入口代码
+  - config-server-bus的启动类
+  ```java
+  @SpringBootApplication
+  @EnableConfigServer
+  public class GitConfigServerApplication {
+    public static void main (String[] args) {
+      SpringApplication.run(GitConfigServerApplication.clss, args);
+    }
+  }
+  ```
+  - 添加权限开放的配置
+    ```java
+    @Configuration
+    public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
+      @Override
+      protected void configure(HttpSecurity http) throws Exception {
+        http.csrf().disable(); // 关闭端点的安全校验
+      }
+    }
+    ```
+- 4) 配置文件配置
+  - application.properties文件
+    - management.endpoints.web.exposure.include=* //表示包含所有端点。默认情况下只打开info,health端点。
+    - management.endpoints.health.show-details=always // 表示详细信息的显示
+  - application.yml
+  ```yaml
+  spring:
+    cloud:
+      config:
+        server:
+          git:
+            uri: htpps://gitee.com/zhongzunfa/spring-cloud-config.git
+            serarch-paths: SC-BOOK-CONFIG
+    application:
+      name: config-server-bus
+    ## 配置rabbitMQ信息
+    rabbitmq:
+      host: localhost
+      port: 5672
+      username: guest
+      password: guest  
+  server:
+    port: 9090    
+  ```
+  - 热刷新的服务端创建完成，下面创建客户端。
+- 5) 创建模块module,config-client-bus-refresh
+
+- 6）配置依赖
+  - spring-cloud-config-client
+  - spring-boot-starter-security # 简单的安全和端点开放
+- 7）启动类ClientConfigGitApplication
+```java
+  @SpringBootApplication
+  public class GitConfigServerApplication {
+    public static void main(String[] args) {
+      SpringApplication.run(GitConfigServerApplication.class, args);
+    }
+  }
+```
+  - 创建controller用于查看远程git上的信息。
+  ```java
+    @RefreshScope
+    @RestController
+    @RequestMapping("configConsumer")
+    public class ConfigClientContrller {
+      @Autowired
+      private ConfigInfoProperties configInfoValue;
+
+      @RequestMapping("/getConfigInfo")
+      public String getConfigInfo() {
+        return configInfoValue;
+      }
+    }
+  ```
+- 8) 配置文件配置
+  - bootstrap.yml
+  ```yaml
+  spring:
+    cloud:
+      config:
+        label: master
+        uri: http://localhost:9090
+        name: config-info
+        profile: dev
+  ```
+  - application.yml
+  ```yaml
+  server:
+    port: 9095
+  spring:
+    application:
+      name: config-client-bus-refresh  
+  ```
+
+- 测试：提叫git修改配置后，执行服务端的端点bus-refresh访问。
+- 地址：http://local-host:9090/actuator/bus-refresh
+-
+```txt
+执行服务端的url:http://local-host:9090/actuator/bus-refresh?destination=**刷新所有客户端,
+可以把这个地址配置在webhooks上面，提交push文件之后，自动执行刷新的动作。
+````
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 11.2 本章小结
