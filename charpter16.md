@@ -205,28 +205,76 @@ public class ProviderController {
   - application_code=service-service-eureka
 - 启动监控服务
 ```bash
-  java -javaagent:skywalking
+  ## 启动Eureka
+  java -javaagent:skywalking-agent.jar -jar ch16-3-eureka-skywalking-1.0-SNAPSHOT.jar
 
+  ##启动zuul
+  java -javaagent:skywalking-agent.jar -jar ch16-3-zuul-skywalking-1.0-SNAPSHOT.jar
+
+  ##启动service b
+  java -javaagent:skywalking-agent.jar -jar ch16-3-service-b-skywalking-1.0-SNAPSHOT.jar
+
+  ##启动service a
+  java -javaagent:skywalking-agent.jar -jar ch16-3-service-a-skywalking-1.0-SNAPSHOT.jar
 ```
+ - 访问：localhost:9020/client/skyController/getInfo
+ - UI功能：
+  - application
+    - 主机信息
+    - 平均通过率
+    - 平均响应时间
+  - service
+  - topology
+  - Trace
+  - alarm
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+16.5.8 总结
+最后总结一下整个案例的启动顺序
+- 1） 启动elasticsearch
+- 2）启动skywalking collector和UI两个进程
+- 3）使用agent启动jar(下面的从eureka-->zuul---->service-a----->service-b)
+- 4) 服务之间发起调用
+- 5）观察链路调用的结果图
 
 16.6 pinpoint (非侵入性APM）
+1 pinpoint特点：
+  - 分布式事物跟踪，跟踪跨分布式应用的消息
+  - 自动检测应用拓扑，帮助你搞清楚应用的架构
+  - 水平扩展以便支持大规模服务器集群
+  - 提供代码级别可见性以便轻松定位失败点和瓶颈
+  - 使用字节码增强技术，添加新功能而无须修改代码
+
+2 pinpoint的优势
+  - 非侵入式：使用字节码增强技术，添加新功能无须修改代码
+  - 资源消耗：对性能的影响最小（资源使用量增加约3%）
+
+16.6.2 pinpoint架构模块
+- Hbase(用于存储数据)
+- pinpoint collector(部署在web容器上) ： 通过处理和分析数据最后存储到hbase。
+- pinpoint web(部署在web容器上) ：查看已经分析好的调用分析数据
+- pinpoint agent(附加到用于分析的Java应用程序) ： 收集应用收据，发送到collector
+
+16.6.3 pinpoint的数据结构
+- span: RPC (远程过程调用)跟踪的基本单位。
+- Trace
+- traceId
+
+16.6.4 pinpoint兼容性
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 16.7 pinpoint实践
