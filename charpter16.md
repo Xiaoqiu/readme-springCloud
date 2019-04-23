@@ -255,26 +255,63 @@ public class ProviderController {
 - pinpoint agent(附加到用于分析的Java应用程序) ： 收集应用收据，发送到collector
 
 16.6.3 pinpoint的数据结构
-- span: RPC (远程过程调用)跟踪的基本单位。
-- Trace
-- traceId
+- span: RPC (远程过程调用)跟踪的基本单位。span将子项标记为spanEvent,作为数据结构，每个span包含一个traceId.
+- Trace: 一系列跨度；由相关的RPC（span）组成。同一跟踪中的跨距共享相同的transactionId。trace通过spanIds和parentSpanIds排序为分层树结构。
+- traceId：由transactionId,spanId,parentSpanIds组成的密钥集合。transactionId表示消息ID,spanId和parentSpanId都表示RPC的父子关系。
+- transactionId:来自单个事务的分布式系统发生/接收的消息的ID,它必须在整个服务器中是全局唯一的。
+- spanId: 接收RPC消息时处理的作业ID
+- parentSpanId: 生成RPC的父span的spanId.
 
 16.6.4 pinpoint兼容性
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- pinpoint需要的Java版本
+- Hbase兼容版本
+- agent和collector兼容版本
+- flink兼容版本
 
 16.7 pinpoint实践
+- pinpoint版本：1.7.x系统版本
+- 1 ）基础环境：
+  - Java version: jdk 1.6-1.8
+  - 打包pinpoint需要本地安装多个版本jdk
+    - JAVA_6_HOME
+    - JAVA_7_HOME
+    - JAVA_8_HOME
+  - hbase 1.2.6
+  - maven: 3.5
+- 2 ）源码安装：
+```bash
+git clone https://github.com/naver/pinpoint.git
+
+cd pinpoint
+
+mvn install-Dmaven.test.skip=true
+
+```
+- 3 ）直接使用release发布的包：
+  - https://github.com/naver/pinpoint/releases
+
+- 4 ）安装hbase
+  - http://apache.mirror.cdnetworks.com/hbase
+  - 下载解压：
+    - bin： 主要的启动脚本
+      - 启动：./start-hbase.sh
+      - 使用jps命令：HMaster进程，说明启动成功
+    - config:配置相关，修改hbase-env.sh的JAVA_HOME
+    - logs： 启动相关日志
+- 5 ）pinpoint的hbase初始化脚本导入
+  - /ch16-3/ch16-3-script/script（源码中也有）
+  - 进入Hbase的bin目录执行：
+  ```bash
+  ./hbase init-hbase.txt
+  ```
+
+16.7.2 部署Collector和web浏览界面
+- collec
+
+16.7.5 总结
+- 1）启动hbase
+- 2) 启动collector
+- 3) 启动web
+- 4) 启动agent
+- 5) 应用调用
+- 6） 查看top分析图
