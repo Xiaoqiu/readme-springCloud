@@ -202,7 +202,7 @@ spring:
 ```java
 public class GatewaySwaggerProvider implements SwaggerResourcesProvider {
   public static final String API_URI = "/v2/api-docs";
-  
+
 }
 ```
 - service模块
@@ -230,3 +230,20 @@ public class GatewaySwaggerProvider implements SwaggerResourcesProvider {
 
 18.3.4 限流
 18.3.5 动态路由
+- gateway启动时将路由配置和规则加载到内存里，无法做到不重启网关就可以动态地对应路由的配置和规则进行增加，修改和删除。
+
+1 Gateway简单的动态路由实现。
+- GatewayControllerEndpoint类提供了动态配置的Rest接口。需要开启Gateway的端点。
+- 自己编写动态路由配置案例
+- 1) 工程gateway依赖：
+  - spring-cloud-starter-gateway
+  - spring-boot-starter-webflux
+  - spring-boot-starter-actuator
+- 2) 定义数据传输模型: 根据gateway的路由模型定义数据传输模型
+  - GatewayRouteDefinition.java
+  - GatewayPredicateDefinition.java
+  - GatewayFilterDefinition.java
+-
+
+
+2  
